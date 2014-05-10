@@ -27,6 +27,7 @@ module.exports = (grunt)->
                         'src/*.coffee': 'coffee'
                         'tools/*.coffee': 'coffee'
                     files: [
+                        'bower_components/d3/d3.js'
                         'bower_components/angular/angular.js'
                         'bower_components/angular-mocks/angular-mocks.js'
                         'tools/*.coffee'

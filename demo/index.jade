@@ -1,11 +1,29 @@
 doctype html
 html(lang="en")
 	head
+		meta(charset="utf-8")
 		title AngularJS Charts by Robin Hu
 		script(src='../bower_components/d3/d3.js')
 		script(src='../bower_components/angular/angular.js')
 		script(src='../dist/angular-charts.js')
+
+		link(href='style.css', rel='stylesheet',type='text/css')
+
+		script(type='text/javascript').
+			function DemoController($scope) {
+				$scope.data = [
+					{
+						key: 'test',
+						values: [
+							{x:0, y:0},
+							{x:1, y:1}
+						]
+					}
+				]
+			}
+
+
 	body(ng-app='rh.angular-charts')
 		h1 My Chart {{'hello'}} 
-
-		rh-line-chart#lineChart
+		div(ng-controller='DemoController')
+			#lineChart(rh-line-chart="", rh-data="data")

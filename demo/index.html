@@ -1,1 +1,13 @@
-<!DOCTYPE html><html lang="en"><head><title>AngularJS Charts by Robin Hu</title><script src="../bower_components/d3/d3.js"></script><script src="../bower_components/angular/angular.js"></script><script src="../dist/angular-charts.js"></script></head><body ng-app="rh.angular-charts"><h1>My Chart {{'hello'}} </h1><rh-line-chart id="lineChart"></rh-line-chart></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>AngularJS Charts by Robin Hu</title><script src="../bower_components/d3/d3.js"></script><script src="../bower_components/angular/angular.js"></script><script src="../dist/angular-charts.js"></script><link href="style.css" rel="stylesheet" type="text/css"><script type="text/javascript">function DemoController($scope) {
+ $scope.data = [
+  {
+   key: 'test',
+   values: [
+    {x:0, y:0},
+    {x:1, y:1}
+   ]
+  }
+ ]
+}
+
+</script></head><body ng-app="rh.angular-charts"><h1>My Chart {{'hello'}} </h1><div ng-controller="DemoController"><div id="lineChart" rh-line-chart="" rh-data="data"></div></div></body></html>
