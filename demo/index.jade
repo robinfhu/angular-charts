@@ -4,7 +4,8 @@ html(lang="en")
 		title AngularJS Charts by Robin Hu
 		script(src='../bower_components/d3/d3.js')
 		script(src='../bower_components/angular/angular.js')
-	body
-		h1 My Chart 
+		script(src='../dist/angular-charts.js')
+	body(ng-app='rh.angular-charts')
+		h1 My Chart {{'hello'}} 
 
 		rh-line-chart#lineChart
