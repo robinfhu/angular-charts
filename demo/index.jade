@@ -10,20 +10,44 @@ html(lang="en")
 		link(href='style.css', rel='stylesheet',type='text/css')
 
 		script(type='text/javascript').
+			function getStocks() {
+				var stocks = [];
+				var startPrice = 50.1;
+				var volatility = 0.08;
+				for(var i = 0; i < 50; i++) {
+					stocks.push({
+						x: i,
+						y: startPrice
+					});
+					var rnd = Math.random();
+					var changePct = 2 * volatility * rnd;
+
+					if (changePct > volatility) {
+						changePct -= 2*volatility;
+					}
+
+					startPrice = startPrice + startPrice * changePct;
+				}
+
+				return stocks;
+			}
+
 			function DemoController($scope) {
 				$scope.data = [
 					{
 						key: 'test',
-						values: [
-							{x:0, y:0},
-							{x:1, y:1}
-						]
+						values: getStocks()
 					}
 				]
+
+				$scope.options = {
+					getX: function(d,i) { return i; },
+					getY: function(d) { return d.y; }
+				}
 			}
 
 
 	body(ng-app='rh.angular-charts')
 		h1 My Chart {{'hello'}} 
 		div(ng-controller='DemoController')
-			#lineChart(rh-line-chart="", rh-data="data")
+			#lineChart(rh-line-chart="", rh-data="data", rh-options="options")

@@ -1,13 +1,37 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>AngularJS Charts by Robin Hu</title><script src="../bower_components/d3/d3.js"></script><script src="../bower_components/angular/angular.js"></script><script src="../dist/angular-charts.js"></script><link href="style.css" rel="stylesheet" type="text/css"><script type="text/javascript">function DemoController($scope) {
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>AngularJS Charts by Robin Hu</title><script src="../bower_components/d3/d3.js"></script><script src="../bower_components/angular/angular.js"></script><script src="../dist/angular-charts.js"></script><link href="style.css" rel="stylesheet" type="text/css"><script type="text/javascript">function getStocks() {
+ var stocks = [];
+ var startPrice = 50.1;
+ var volatility = 0.08;
+ for(var i = 0; i < 50; i++) {
+  stocks.push({
+   x: i,
+   y: startPrice
+  });
+  var rnd = Math.random();
+  var changePct = 2 * volatility * rnd;
+  
+  if (changePct > volatility) {
+   changePct -= 2*volatility;
+  }
+  
+  startPrice = startPrice + startPrice * changePct;
+ }
+ 
+ return stocks;
+}
+
+function DemoController($scope) {
  $scope.data = [
   {
    key: 'test',
-   values: [
-    {x:0, y:0},
-    {x:1, y:1}
-   ]
+   values: getStocks()
   }
  ]
+ 
+ $scope.options = {
+  getX: function(d,i) { return i; },
+  getY: function(d) { return d.y; }
+ }
 }
 
-</script></head><body ng-app="rh.angular-charts"><h1>My Chart {{'hello'}} </h1><div ng-controller="DemoController"><div id="lineChart" rh-line-chart="" rh-data="data"></div></div></body></html>
+</script></head><body ng-app="rh.angular-charts"><h1>My Chart {{'hello'}} </h1><div ng-controller="DemoController"><div id="lineChart" rh-line-chart="" rh-data="data" rh-options="options"></div></div></body></html>

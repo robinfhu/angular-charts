@@ -13,24 +13,34 @@
         attr = _ref[_i];
         $scope.$watch(attr, (function(_this) {
           return function() {
+            _this.computeScales();
             return _this.pathData = _this.computePath();
           };
         })(this));
       }
     }
 
-    LineChartCtrl.prototype.computePath = function() {
-      var points, result, v, values, x, xScale, y, yScale, _i, _len;
+    LineChartCtrl.prototype.computeScales = function() {
+      var opts, values, xExtent, yExtent;
       values = this.$scope.data[0].values;
+      opts = this.$scope.options;
+      this.xScale = d3.scale.linear();
+      this.yScale = d3.scale.linear();
+      xExtent = d3.extent(values.map(opts.getX));
+      this.xScale.domain(xExtent).range([0, this.$scope.parentWidth]);
+      yExtent = d3.extent(values.map(opts.getY));
+      return this.yScale.domain(yExtent).range([this.$scope.parentHeight, 0]);
+    };
+
+    LineChartCtrl.prototype.computePath = function() {
+      var i, opts, points, result, v, values, x, y, _i, _len;
+      values = this.$scope.data[0].values;
+      opts = this.$scope.options;
       points = [];
-      xScale = d3.scale.linear();
-      yScale = d3.scale.linear();
-      xScale.domain([0, values.length - 1]).range([0, this.$scope.parentWidth]);
-      yScale.domain([0, 1]).range([this.$scope.parentHeight, 0]);
-      for (_i = 0, _len = values.length; _i < _len; _i++) {
-        v = values[_i];
-        x = xScale(v.x);
-        y = yScale(v.y);
+      for (i = _i = 0, _len = values.length; _i < _len; i = ++_i) {
+        v = values[i];
+        x = this.xScale(opts.getX(v, i));
+        y = this.yScale(opts.getY(v, i));
         points.push("" + x + "," + y);
       }
       return result = "M" + (points.join('L'));
@@ -48,9 +58,10 @@
       controller: LineChartCtrl.name,
       controllerAs: 'ctrl',
       scope: {
-        data: '=rhData'
+        data: '=rhData',
+        options: '=rhOptions'
       },
-      template: "<svg>\n	<g style='stroke: red'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n</svg>",
+      template: "<svg>\n	<g style='stroke: red;fill: none;'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var domElem;
         domElem = element[0];

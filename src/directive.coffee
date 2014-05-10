@@ -10,24 +10,34 @@ class LineChartCtrl
 			'parentHeight'
 		]
 			$scope.$watch attr, => 
+				@computeScales()
 				@pathData = @computePath()
+
+	computeScales: ->
+		values = @$scope.data[0].values 
+		opts = @$scope.options
+
+		@xScale = d3.scale.linear()
+		@yScale = d3.scale.linear()
+
+		xExtent = d3.extent values.map opts.getX 
+		@xScale.domain(xExtent).range([0,@$scope.parentWidth])
+		
+		yExtent = d3.extent values.map opts.getY
+		@yScale.domain(yExtent).range([@$scope.parentHeight,0])
 
 	computePath: ->
 		# Given data, Create <path> d= parameter. Like M0,100L100,0
 		values = @$scope.data[0].values 
+		opts = @$scope.options
 
 		points = []
 
-		xScale = d3.scale.linear()
-		yScale = d3.scale.linear()
-
-		xScale.domain([0, values.length-1]).range([0,@$scope.parentWidth])
-		yScale.domain([0, 1]).range([@$scope.parentHeight,0])
-		for v in values 
-			x = xScale v.x 
-			y = yScale v.y 
+		for v,i in values 
+			x = @xScale opts.getX(v,i)
+			y = @yScale opts.getY(v,i)
+			
 			points.push "#{x},#{y}"
-
 
 		result = "M#{points.join('L')}"
 
@@ -39,9 +49,10 @@ module.directive 'rhLineChart', ->
 	controllerAs: 'ctrl'
 	scope:
 		data: '=rhData'
+		options: '=rhOptions'
 	template: """
 	<svg>
-		<g style='stroke: red'>
+		<g style='stroke: red;fill: none;'>
 			<path ng-attr-d={{ctrl.pathData}} />
 		</g>
 	</svg>
