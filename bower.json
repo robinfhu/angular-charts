@@ -1,0 +1,17 @@
+{
+  "name": "ng-json-explorer",
+  "license": "Open Source",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.2.1",
+    "angular-mocks": "~1.2.1",
+    "d3": "~3.4.6"
+  }
+}
