@@ -12,7 +12,10 @@ module.exports = (grunt)->
                 bare: false
             client:
                 files:
-                    'dist/angular-charts.js': ['src/directive.coffee']
+                    'dist/angular-charts.js': [
+                        'src/directive.coffee'
+                        'src/service.coffee'
+                    ]
 
 		karma:
             client:

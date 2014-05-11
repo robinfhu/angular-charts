@@ -207,3 +207,38 @@
   });
 
 }).call(this);
+
+(function() {
+  var module;
+
+  module = angular.module('rh.angular-charts');
+
+  module.factory('interactiveBisect', function() {
+    var interactiveBisect;
+    return interactiveBisect = function(values, search, getX) {
+      var bisect, index, nextVal, prevIndex, prevVal;
+      if (!angular.isArray(values)) {
+        return null;
+      }
+      if (values.length === 0) {
+        return null;
+      }
+      if (values.length === 1) {
+        return 0;
+      }
+      bisect = d3.bisector(getX).left;
+      index = bisect(values, search);
+      index = d3.min([index, values.length - 1]);
+      if (index > 0) {
+        prevIndex = index - 1;
+        prevVal = getX(values[prevIndex]);
+        nextVal = getX(values[index]);
+        if (Math.abs(search - prevVal) < Math.abs(search - nextVal)) {
+          index = prevIndex;
+        }
+      }
+      return index;
+    };
+  });
+
+}).call(this);
