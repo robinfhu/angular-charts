@@ -3,3 +3,8 @@
 	height: 350px;
 	border: solid 1px black;
 }
+
+.rh-chart text {
+	font-family: Arial;
+	font-size: 12px;
+}

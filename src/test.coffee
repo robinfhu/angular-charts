@@ -25,6 +25,9 @@ describe 'Angular-Chart Module', ->
 
 			element = render 'rh-line-chart', sampleScope, attrs
 
+		getAttr = (elem, attr)->
+			elem.attributes.getNamedItem(attr).nodeValue
+
 		it 'should exist (and have svg tag)', ->
 			element = createElem()
 			should.exist element, 'element exists'
@@ -145,8 +148,8 @@ describe 'Angular-Chart Module', ->
 			scope.$digest()
 
 			path = element[0].querySelector 'svg .rh-lines path'
-			d = path.attributes.getNamedItem 'd'
-			svgPathData = d.nodeValue
+
+			svgPathData = getAttr path, 'd'
 
 			svgPathData.should.equal 'M0,100L50,0L100,50'
 
@@ -223,14 +226,14 @@ describe 'Angular-Chart Module', ->
 
 			should.exist xAxis, 'xAxis exists'
 
-			pathData = xAxis.attributes.getNamedItem('d').nodeValue
+			pathData = getAttr xAxis, 'd'
 			pathData.should.equal 'M0,100H100'
 
 			yAxis = axesGroup.querySelector 'path.y-axis'
 
 			should.exist yAxis, 'yAxis exists'
 
-			pathData = yAxis.attributes.getNamedItem('d').nodeValue
+			pathData = getAttr yAxis, 'd'
 			pathData.should.equal 'M0,0V100'
 
 		it 'creates x and y tick marks', ->
@@ -250,16 +253,74 @@ describe 'Angular-Chart Module', ->
 			yTicks = axesTicks.querySelectorAll 'path.y-tick'
 
 			yTicks.should.have.length.greaterThan 4
-			pathData = yTicks[2].attributes.getNamedItem('d').nodeValue
+			pathData = getAttr yTicks[2],'d'
 
-			pathData.should.match /M.+?,0V103/
+			pathData.should.match /M0,.+?H103/ 
 
 			xTicks = axesTicks.querySelectorAll 'path.x-tick'
 
 			xTicks.should.have.length.greaterThan 4
-			pathData = xTicks[2].attributes.getNamedItem('d').nodeValue
+			pathData = getAttr xTicks[2],'d'
 
-			pathData.should.match /M0,.+?H103/
+			pathData.should.match /M.+?,0V103/
+
+		it 'creates y axis tick labels', ->
+			element = createElem defaultData
+
+			scope = element.isolateScope()
+
+			scope.parentWidth = 103
+			scope.parentHeight = 103
+
+			scope.$digest()
+
+			labels = element[0].querySelectorAll '.rh-axes .labels text.y-tick'
+
+			labels.should.have.length.greaterThan 4
+
+			getAttr(labels[2],'text-anchor').should.equal 'end'
+
+			labels[0].innerHTML.should.contain '0'
+			labels[1].innerHTML.should.contain '0.2'
+		
+			prev = null
+			for b in labels
+				y = parseInt getAttr b, 'y'
+				y.should.be.a 'number'
+
+				y.should.not.equal prev 
+				prev = y
+
+			getAttr(labels[3],'x').should.equal '-10'
+
+		it 'creates x axis tick labels', ->
+			element = createElem defaultData
+
+			scope = element.isolateScope()
+
+			scope.parentWidth = 103
+			scope.parentHeight = 103
+
+			scope.$digest()
+
+			labels = element[0].querySelectorAll '.rh-axes .labels text.x-tick'
+
+			labels.should.have.length.greaterThan 4
+
+			getAttr(labels[2],'text-anchor').should.equal 'middle'
+
+			y = parseInt getAttr(labels[2],'y')
+
+			y.should.be.greaterThan 103 
+
+			prev = null
+			for b in labels
+				x = parseInt getAttr b, 'x'
+				x.should.be.a 'number'
+
+				x.should.not.equal prev 
+				prev = x
+
 
 		it 'can create left and bottom margins', ->
 			options = 
@@ -281,7 +342,7 @@ describe 'Angular-Chart Module', ->
 
 			should.exist wholeChart, 'whole-chart exists'
 
-			transform = wholeChart.attributes.getNamedItem('transform').nodeValue
+			transform = getAttr wholeChart, 'transform'
 
 			should.exist transform, 'transform= attribute'
 
