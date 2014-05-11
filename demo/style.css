@@ -8,3 +8,7 @@
 	font-family: Arial;
 	font-size: 12px;
 }
+
+.rh-chart .interactive-layer {
+	opacity: 0;
+}

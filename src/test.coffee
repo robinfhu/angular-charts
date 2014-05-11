@@ -353,3 +353,40 @@ describe 'Angular-Chart Module', ->
 
 			controller.realWidth.should.equal (700-90)
 			controller.realHeight.should.equal (500-90)
+
+		it 'has a layer where you can mouseover and see a guideline', ->
+			options = 
+				margin:
+					left: 10
+
+			element = createElem defaultData, options
+
+			scope = element.isolateScope()
+			controller = element.controller 'rhLineChart'
+
+			scope.parentWidth = 103
+			scope.parentHeight = 103
+
+			scope.$digest()
+
+			layer = element[0].querySelector 'svg .whole-chart rect.interactive-layer'
+			should.exist layer, 'interactive layer'
+
+			getAttr(layer,'width').should.equal '93'
+			getAttr(layer,'height').should.equal '103'
+
+			controller.showGuideline true
+			scope.$digest()
+
+			line = element[0].querySelector '.whole-chart .guideline'
+			should.exist line, 'guideline exists'
+
+			controller.updateGuideline {offsetX: 20}
+			scope.$digest()
+
+			getAttr(line,'d').should.equal 'M10,0V103'
+
+			controller.showGuideline false
+			scope.$digest()
+			line = element[0].querySelector '.whole-chart .guideline'
+			should.not.exist line, 'guideline does not exists'

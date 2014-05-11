@@ -3,6 +3,8 @@ module = angular.module 'rh.angular-charts', []
 class LineChartCtrl
 	constructor: (@$scope)->
 		@pathData = ''
+		@_displayGuideline = false
+		@guidelinePath = 'M0,0'
 
 		for attr in [
 			'data'
@@ -27,8 +29,8 @@ class LineChartCtrl
 		return true
 
 	computeArea: ->
-		left = @$scope.options.margin.left
-		bottom = @$scope.options.margin.bottom 
+		left = @$scope.options.margin.left || 0
+		bottom = @$scope.options.margin.bottom || 0
 
 		@realWidth = @$scope.parentWidth - left
 		@realHeight = @$scope.parentHeight - bottom
@@ -118,6 +120,15 @@ class LineChartCtrl
 			xTickLabels
 		}
 
+	updateGuideline: (evt)->
+		xPos = evt.offsetX - @$scope.options.margin.left
+		@guidelinePath = "M#{xPos},0V#{@realHeight}"
+
+	showGuideline: (flag)->
+		return @_displayGuideline unless flag?
+
+		@_displayGuideline = flag
+
 	strokeColor: (i)->
 		d3.scale.category10().range()[i % 10]
 
@@ -178,6 +189,19 @@ module.directive 'rhLineChart', ($window)->
 					ng-attr-d={{line}} 
 					ng-attr-stroke={{ctrl.strokeColor($index)}} />
 			</g>
+
+			<path class='guideline' 
+				stroke='#aaa'
+				ng-attr-d={{ctrl.guidelinePath}} 
+				ng-if='ctrl.showGuideline()' />
+
+			<rect 
+				class='interactive-layer' 
+				ng-mouseenter='ctrl.showGuideline(true)'
+				ng-mouseleave='ctrl.showGuideline(false)'
+				ng-mousemove='ctrl.updateGuideline($event)'
+				ng-attr-height={{ctrl.realHeight}}
+				ng-attr-width={{ctrl.realWidth}} />
 		</g>
 	</svg>
 	"""
