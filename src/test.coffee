@@ -136,3 +136,66 @@ describe 'Angular-Chart Module', ->
 
 			svgPathData.should.equal 'M0,100L50,0L100,50'
 
+		it 'creates horizontal+vertical axes lines', ->
+			data = [
+				x: 0
+				y: 0
+			,
+				x: 1
+				y: 2
+			,
+				x: 2
+				y: 1
+			]
+			element = createElem data
+
+			scope = element.isolateScope()
+
+			scope.parentWidth = 100
+			scope.parentHeight = 100
+
+			scope.$digest()
+
+			axesGroup = element[0].querySelector '.rh-axes'
+
+			should.exist axesGroup, 'axes group'
+			xAxis = axesGroup.querySelector 'path.x-axis'
+
+			should.exist xAxis, 'xAxis exists'
+
+			pathData = xAxis.attributes.getNamedItem('d').nodeValue
+			pathData.should.equal 'M0,100H100'
+
+			yAxis = axesGroup.querySelector 'path.y-axis'
+
+			should.exist yAxis, 'yAxis exists'
+
+			pathData = yAxis.attributes.getNamedItem('d').nodeValue
+			pathData.should.equal 'M0,0V100'
+
+		it 'creates x and y tick marks', ->
+			data = [
+				x: 0
+				y: 0
+			,
+				x: 1
+				y: 2
+			,
+				x: 2
+				y: 1
+			]
+			element = createElem data
+
+			scope = element.isolateScope()
+
+			scope.parentWidth = 100
+			scope.parentHeight = 100
+
+			scope.$digest()
+
+			axesTicks = element[0].querySelector '.rh-axes .ticks'
+
+			should.exist axesTicks, 'axes ticks group'
+			
+
+

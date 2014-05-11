@@ -13,12 +13,19 @@
         attr = _ref[_i];
         $scope.$watch(attr, (function(_this) {
           return function() {
+            _this.computeArea();
             _this.computeScales();
-            return _this.pathData = _this.computePath();
+            _this.computeLines();
+            return _this.computeAxes();
           };
         })(this));
       }
     }
+
+    LineChartCtrl.prototype.computeArea = function() {
+      this.realWidth = this.$scope.parentWidth;
+      return this.realHeight = this.$scope.parentHeight;
+    };
 
     LineChartCtrl.prototype.computeScales = function() {
       var opts, values, xExtent, yExtent;
@@ -27,14 +34,13 @@
       this.xScale = d3.scale.linear();
       this.yScale = d3.scale.linear();
       xExtent = d3.extent(values.map(opts.getX));
-      this.xScale.domain(xExtent).range([0, this.$scope.parentWidth]);
+      this.xScale.domain(xExtent).range([0, this.realWidth]);
       yExtent = d3.extent(values.map(opts.getY));
-      return this.yScale.domain(yExtent).range([this.$scope.parentHeight, 0]);
+      return this.yScale.domain(yExtent).range([this.realHeight, 0]);
     };
 
-    LineChartCtrl.prototype.computePath = function() {
-      var i, opts, points, result, v, values, x, y, _i, _len;
-      values = this.$scope.data[0].values;
+    LineChartCtrl.prototype.computePath = function(values) {
+      var i, opts, points, result, v, x, y, _i, _len;
       opts = this.$scope.options;
       points = [];
       for (i = _i = 0, _len = values.length; _i < _len; i = ++_i) {
@@ -44,6 +50,19 @@
         points.push("" + x + "," + y);
       }
       return result = "M" + (points.join('L'));
+    };
+
+    LineChartCtrl.prototype.computeLines = function() {
+      return this.pathData = this.computePath(this.$scope.data[0].values);
+    };
+
+    LineChartCtrl.prototype.computeAxes = function() {
+      var yPosition;
+      yPosition = this.yScale(0);
+      return this.axis = {
+        xPathData: "M0," + yPosition + "H" + this.realWidth,
+        yPathData: "M0,0V" + this.realHeight
+      };
     };
 
     return LineChartCtrl;
@@ -61,7 +80,7 @@
         data: '=rhData',
         options: '=rhOptions'
       },
-      template: "<svg>\n	<g style='stroke: red;fill: none;'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n</svg>",
+      template: "<svg>\n	<g style='stroke: red;fill: none;' class='rh-lines'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n\n	<g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks'>\n		</g>\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var domElem;
         domElem = element[0];
