@@ -52,9 +52,19 @@ class LineChartCtrl
 	computeAxes: ->
 		yPosition = @yScale 0
 
+		yTicks = @xScale.ticks().map (t)=>
+			xPos = @xScale t 
+			"M#{xPos},0V#{@realHeight}"
+
+		xTicks = @yScale.ticks().map (t)=>
+			yPos = @yScale t 
+			"M0,#{yPos}H#{@realWidth}"
+
 		@axis = 
 			xPathData: "M0,#{yPosition}H#{@realWidth}"
 			yPathData: "M0,0V#{@realHeight}"
+			yTicks: yTicks
+			xTicks: xTicks
 
 
 
@@ -69,16 +79,17 @@ module.directive 'rhLineChart', ($window)->
 		options: '=rhOptions'
 	template: """
 	<svg>
-		<g style='stroke: red;fill: none;' class='rh-lines'>
-			<path ng-attr-d={{ctrl.pathData}} />
-		</g>
-
-		<g style='stroke: black; stroke-width: 2px;' class='rh-axes'>
+	    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>
 			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />
 			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />
 			
-			<g class='ticks'>
+			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>
+				<path class='y-tick' ng-repeat='tick in ctrl.axis.yTicks track by $index' ng-attr-d={{tick}} />
+				<path class='x-tick' ng-repeat='tick in ctrl.axis.xTicks track by $index' ng-attr-d={{tick}} />
 			</g>
+		</g>
+		<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>
+			<path ng-attr-d={{ctrl.pathData}} />
 		</g>
 	</svg>
 	"""

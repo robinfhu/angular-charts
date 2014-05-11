@@ -69,7 +69,7 @@ describe 'Angular-Chart Module', ->
 			should.exist scope.data, 'scope should have data'
 			scope.data.should.be.instanceof Array
 
-			path = element[0].querySelector 'svg path'
+			path = element[0].querySelector 'svg .rh-lines path'
 			d = path.attributes.getNamedItem 'd'
 
 			should.exist d, 'path has d='
@@ -104,7 +104,7 @@ describe 'Angular-Chart Module', ->
 
 			scope.$digest()
 
-			path = element[0].querySelector 'svg path'
+			path = element[0].querySelector 'svg .rh-lines path'
 			d = path.attributes.getNamedItem 'd'
 			svgPathData = d.nodeValue
 
@@ -130,7 +130,7 @@ describe 'Angular-Chart Module', ->
 
 			scope.$digest()
 
-			path = element[0].querySelector 'svg path'
+			path = element[0].querySelector 'svg .rh-lines path'
 			d = path.attributes.getNamedItem 'd'
 			svgPathData = d.nodeValue
 
@@ -188,14 +188,25 @@ describe 'Angular-Chart Module', ->
 
 			scope = element.isolateScope()
 
-			scope.parentWidth = 100
-			scope.parentHeight = 100
+			scope.parentWidth = 103
+			scope.parentHeight = 103
 
 			scope.$digest()
 
 			axesTicks = element[0].querySelector '.rh-axes .ticks'
 
 			should.exist axesTicks, 'axes ticks group'
-			
 
+			yTicks = axesTicks.querySelectorAll 'path.y-tick'
 
+			yTicks.should.have.length.greaterThan 4
+			pathData = yTicks[2].attributes.getNamedItem('d').nodeValue
+
+			pathData.should.match /M.+?,0V103/
+
+			xTicks = axesTicks.querySelectorAll 'path.x-tick'
+
+			xTicks.should.have.length.greaterThan 4
+			pathData = xTicks[2].attributes.getNamedItem('d').nodeValue
+
+			pathData.should.match /M0,.+?H103/

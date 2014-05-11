@@ -57,11 +57,27 @@
     };
 
     LineChartCtrl.prototype.computeAxes = function() {
-      var yPosition;
+      var xTicks, yPosition, yTicks;
       yPosition = this.yScale(0);
+      yTicks = this.xScale.ticks().map((function(_this) {
+        return function(t) {
+          var xPos;
+          xPos = _this.xScale(t);
+          return "M" + xPos + ",0V" + _this.realHeight;
+        };
+      })(this));
+      xTicks = this.yScale.ticks().map((function(_this) {
+        return function(t) {
+          var yPos;
+          yPos = _this.yScale(t);
+          return "M0," + yPos + "H" + _this.realWidth;
+        };
+      })(this));
       return this.axis = {
         xPathData: "M0," + yPosition + "H" + this.realWidth,
-        yPathData: "M0,0V" + this.realHeight
+        yPathData: "M0,0V" + this.realHeight,
+        yTicks: yTicks,
+        xTicks: xTicks
       };
     };
 
@@ -80,7 +96,7 @@
         data: '=rhData',
         options: '=rhOptions'
       },
-      template: "<svg>\n	<g style='stroke: red;fill: none;' class='rh-lines'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n\n	<g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks'>\n		</g>\n	</g>\n</svg>",
+      template: "<svg>\n    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n			<path class='y-tick' ng-repeat='tick in ctrl.axis.yTicks track by $index' ng-attr-d={{tick}} />\n			<path class='x-tick' ng-repeat='tick in ctrl.axis.xTicks track by $index' ng-attr-d={{tick}} />\n		</g>\n	</g>\n	<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var calcSize;
         calcSize = function() {
