@@ -8,10 +8,7 @@ describe 'Angular-Chart Module', ->
 
 		createElem = (data=[])->
 			sampleScope = 
-				line: [
-					key: 'test'
-					values: data
-				]
+				line: data
 
 				options: 
 					getX: (d,i)-> i 
@@ -51,12 +48,16 @@ describe 'Angular-Chart Module', ->
 
 		it 'creates a very simple line', ->
 			data = [
-				x: 0
-				y: 0
-			,
-				x: 1
-				y: 1
+				key: 'test'
+				values: [
+					x: 0
+					y: 0
+				,
+					x: 1
+					y: 1
+				]
 			]
+
 			element = createElem data
 
 			scope = element.isolateScope()
@@ -80,21 +81,25 @@ describe 'Angular-Chart Module', ->
 
 		it 'creates a line with 5 points', ->
 			data = [
-				x: 0
-				y: 0
-			,
-				x: 1
-				y: 1
-			,
-				x: 2
-				y: 0.5
-			,
-				x: 3
-				y: 0.25
-			,
-				x: 4
-				y: 0.4
+				key: 'test'
+				values: [
+					x: 0
+					y: 0
+				,
+					x: 1
+					y: 1
+				,
+					x: 2
+					y: 0.5
+				,
+					x: 3
+					y: 0.25
+				,
+					x: 4
+					y: 0.4
+				]
 			]
+ 
 			element = createElem data
 
 			scope = element.isolateScope()
@@ -110,8 +115,9 @@ describe 'Angular-Chart Module', ->
 
 			svgPathData.should.equal 'M0,100L25,0L50,50L75,75L100,60'
 
-		it 'creates a line with Y range of [0,2]', ->
-			data = [
+		defaultData = [
+			key: 'test'
+			values: [
 				x: 0
 				y: 0
 			,
@@ -121,7 +127,10 @@ describe 'Angular-Chart Module', ->
 				x: 2
 				y: 1
 			]
-			element = createElem data
+		]
+
+		it 'creates a line with Y range of [0,2]', -> 
+			element = createElem defaultData
 
 			scope = element.isolateScope()
 
@@ -136,18 +145,64 @@ describe 'Angular-Chart Module', ->
 
 			svgPathData.should.equal 'M0,100L50,0L100,50'
 
-		it 'creates horizontal+vertical axes lines', ->
+		it 'creates multiple line series`', ->
 			data = [
-				x: 0
-				y: 0
+				key: 'test 1'
+				values: [
+					x: 0
+					y: 10
+				,
+					x: 1
+					y: 20
+				,
+					x: 2
+					y: 30
+				]
 			,
-				x: 1
-				y: 2
+				key: 'test 2'
+				values: [
+					x: 0
+					y: 5
+				,
+					x: 1
+					y: 10
+				,
+					x: 2
+					y: 15
+				]
 			,
-				x: 2
-				y: 1
+				key: 'test 3'
+				values: [
+					x: 0
+					y: 1
+				,
+					x: 1
+					y: 1.5
+				,
+					x: 2
+					y: 1.7
+				]
 			]
-			element = createElem data
+
+			element = createElem data 
+			scope = element.isolateScope()
+			controller = element.controller 'rhLineChart'
+
+			scope.parentWidth = 100
+			scope.parentHeight = 100
+			scope.$digest()
+
+			controller.should.have.property 'xScale'
+			controller.should.have.property 'yScale'
+
+			lines = element[0].querySelectorAll '.rh-lines path'
+
+			lines.should.have.length 3
+
+			controller.yScale.domain().should.deep.equal [1,30]
+
+		it 'creates horizontal+vertical axes lines', ->
+			element = createElem defaultData
 
 			scope = element.isolateScope()
 
@@ -174,17 +229,7 @@ describe 'Angular-Chart Module', ->
 			pathData.should.equal 'M0,0V100'
 
 		it 'creates x and y tick marks', ->
-			data = [
-				x: 0
-				y: 0
-			,
-				x: 1
-				y: 2
-			,
-				x: 2
-				y: 1
-			]
-			element = createElem data
+			element = createElem defaultData
 
 			scope = element.isolateScope()
 

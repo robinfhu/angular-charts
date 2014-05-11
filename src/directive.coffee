@@ -10,10 +10,19 @@ class LineChartCtrl
 			'parentHeight'
 		]
 			$scope.$watch attr, => 
+				return unless @sanityCheck()
+
 				@computeArea()
 				@computeScales()
 				@computeLines()
 				@computeAxes()
+
+	sanityCheck: ->
+		return false unless @$scope.data?
+		return false if not angular.isArray @$scope.data
+		return false if @$scope.data.length is 0
+
+		return true
 
 	computeArea: ->
 		@realWidth = @$scope.parentWidth
@@ -26,14 +35,29 @@ class LineChartCtrl
 		@xScale = d3.scale.linear()
 		@yScale = d3.scale.linear()
 
+		# Figure out min and max x-axis values
 		xExtent = d3.extent values.map opts.getX 
 		@xScale.domain(xExtent).range([0,@realWidth])
 		
-		yExtent = d3.extent values.map opts.getY
+		###
+		Figure out the maximum and minimum y-axis value
+		from all data points
+		###
+		yValues = d3.merge @$scope.data.map(
+			(d)-> d.values.map(opts.getY)
+		) 
+
+		yExtent = d3.extent yValues
 		@yScale.domain(yExtent).range([@realHeight,0])
 
 	computePath: (values)->
-		# Given data, Create <path> d= parameter. Like M0,100L100,0
+		###
+		Given array of x,y pairs, Create <path> d= parameter. Like M0,100L100,0
+
+		For each point, need to compute the exact pixel coordinate location in <svg>
+		box.  That's why we use the xScale and yScale functions.
+		###
+
 		opts = @$scope.options
 
 		points = []
@@ -47,9 +71,17 @@ class LineChartCtrl
 		result = "M#{points.join('L')}"
 
 	computeLines: ->
-		@pathData = @computePath @$scope.data[0].values
+		###
+		Loop through all series' and create a <path> definition
+		for each line.
+		###
+		@lines = @$scope.data.map (d)=>
+			@computePath d.values 
 
 	computeAxes: ->
+		###
+		Compute x,y locations for the tick grid lines
+		###
 		yPosition = @yScale 0
 
 		yTicks = @xScale.ticks().map (t)=>
@@ -89,7 +121,7 @@ module.directive 'rhLineChart', ($window)->
 			</g>
 		</g>
 		<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>
-			<path ng-attr-d={{ctrl.pathData}} />
+			<path ng-repeat='line in ctrl.lines track by $index' ng-attr-d={{line}} />
 		</g>
 	</svg>
 	"""

@@ -13,6 +13,9 @@
         attr = _ref[_i];
         $scope.$watch(attr, (function(_this) {
           return function() {
+            if (!_this.sanityCheck()) {
+              return;
+            }
             _this.computeArea();
             _this.computeScales();
             _this.computeLines();
@@ -22,24 +25,52 @@
       }
     }
 
+    LineChartCtrl.prototype.sanityCheck = function() {
+      if (this.$scope.data == null) {
+        return false;
+      }
+      if (!angular.isArray(this.$scope.data)) {
+        return false;
+      }
+      if (this.$scope.data.length === 0) {
+        return false;
+      }
+      return true;
+    };
+
     LineChartCtrl.prototype.computeArea = function() {
       this.realWidth = this.$scope.parentWidth;
       return this.realHeight = this.$scope.parentHeight;
     };
 
     LineChartCtrl.prototype.computeScales = function() {
-      var opts, values, xExtent, yExtent;
+      var opts, values, xExtent, yExtent, yValues;
       values = this.$scope.data[0].values;
       opts = this.$scope.options;
       this.xScale = d3.scale.linear();
       this.yScale = d3.scale.linear();
       xExtent = d3.extent(values.map(opts.getX));
       this.xScale.domain(xExtent).range([0, this.realWidth]);
-      yExtent = d3.extent(values.map(opts.getY));
+
+      /*
+      		Figure out the maximum and minimum y-axis value
+      		from all data points
+       */
+      yValues = d3.merge(this.$scope.data.map(function(d) {
+        return d.values.map(opts.getY);
+      }));
+      yExtent = d3.extent(yValues);
       return this.yScale.domain(yExtent).range([this.realHeight, 0]);
     };
 
     LineChartCtrl.prototype.computePath = function(values) {
+
+      /*
+      		Given array of x,y pairs, Create <path> d= parameter. Like M0,100L100,0
+      
+      		For each point, need to compute the exact pixel coordinate location in <svg>
+      		box.  That's why we use the xScale and yScale functions.
+       */
       var i, opts, points, result, v, x, y, _i, _len;
       opts = this.$scope.options;
       points = [];
@@ -53,10 +84,23 @@
     };
 
     LineChartCtrl.prototype.computeLines = function() {
-      return this.pathData = this.computePath(this.$scope.data[0].values);
+
+      /*
+      		Loop through all series' and create a <path> definition
+      		for each line.
+       */
+      return this.lines = this.$scope.data.map((function(_this) {
+        return function(d) {
+          return _this.computePath(d.values);
+        };
+      })(this));
     };
 
     LineChartCtrl.prototype.computeAxes = function() {
+
+      /*
+      		Compute x,y locations for the tick grid lines
+       */
       var xTicks, yPosition, yTicks;
       yPosition = this.yScale(0);
       yTicks = this.xScale.ticks().map((function(_this) {
@@ -96,7 +140,7 @@
         data: '=rhData',
         options: '=rhOptions'
       },
-      template: "<svg>\n    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n			<path class='y-tick' ng-repeat='tick in ctrl.axis.yTicks track by $index' ng-attr-d={{tick}} />\n			<path class='x-tick' ng-repeat='tick in ctrl.axis.xTicks track by $index' ng-attr-d={{tick}} />\n		</g>\n	</g>\n	<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n</svg>",
+      template: "<svg>\n    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n			<path class='y-tick' ng-repeat='tick in ctrl.axis.yTicks track by $index' ng-attr-d={{tick}} />\n			<path class='x-tick' ng-repeat='tick in ctrl.axis.xTicks track by $index' ng-attr-d={{tick}} />\n		</g>\n	</g>\n	<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>\n		<path ng-repeat='line in ctrl.lines track by $index' ng-attr-d={{line}} />\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var calcSize;
         calcSize = function() {
