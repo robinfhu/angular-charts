@@ -6,13 +6,18 @@ describe 'Angular-Chart Module', ->
 	describe 'line chart directive', ->
 		beforeEach angular.mock.module 'rh.angular-charts'
 
-		createElem = (data=[])->
+		createElem = (data=[], options={})->
 			sampleScope = 
 				line: data
 
 				options: 
 					getX: (d,i)-> i 
 					getY: (d)-> d.y
+					margin:
+						left: 0
+						bottom: 0
+
+			angular.extend sampleScope.options, options
 
 			attrs = 
 				'rh-data': 'line'
@@ -255,3 +260,35 @@ describe 'Angular-Chart Module', ->
 			pathData = xTicks[2].attributes.getNamedItem('d').nodeValue
 
 			pathData.should.match /M0,.+?H103/
+
+		it 'can create left and bottom margins', ->
+			options = 
+				margin:
+					left: 90
+					bottom: 90
+
+			element = createElem defaultData, options
+
+			scope = element.isolateScope()
+			controller = element.controller 'rhLineChart'
+
+			scope.parentWidth = 700
+			scope.parentHeight = 500
+
+			scope.$digest()
+
+			wholeChart = element[0].querySelector 'svg .whole-chart'
+
+			should.exist wholeChart, 'whole-chart exists'
+
+			transform = wholeChart.attributes.getNamedItem('transform').nodeValue
+
+			should.exist transform, 'transform= attribute'
+
+			transform.should.contain 'translate(90,0)'
+
+			controller.should.have.property 'realWidth'
+			controller.should.have.property 'realHeight'
+
+			controller.realWidth.should.equal (700-90)
+			controller.realHeight.should.equal (500-90)

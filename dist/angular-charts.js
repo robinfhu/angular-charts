@@ -13,17 +13,21 @@
         attr = _ref[_i];
         $scope.$watch(attr, (function(_this) {
           return function() {
-            if (!_this.sanityCheck()) {
-              return;
-            }
-            _this.computeArea();
-            _this.computeScales();
-            _this.computeLines();
-            return _this.computeAxes();
+            return _this.chartUpdate();
           };
         })(this));
       }
     }
+
+    LineChartCtrl.prototype.chartUpdate = function() {
+      if (!this.sanityCheck()) {
+        return;
+      }
+      this.computeArea();
+      this.computeScales();
+      this.computeLines();
+      return this.computeAxes();
+    };
 
     LineChartCtrl.prototype.sanityCheck = function() {
       if (this.$scope.data == null) {
@@ -39,8 +43,12 @@
     };
 
     LineChartCtrl.prototype.computeArea = function() {
-      this.realWidth = this.$scope.parentWidth;
-      return this.realHeight = this.$scope.parentHeight;
+      var bottom, left;
+      left = this.$scope.options.margin.left;
+      bottom = this.$scope.options.margin.bottom;
+      this.realWidth = this.$scope.parentWidth - left;
+      this.realHeight = this.$scope.parentHeight - bottom;
+      return this.marginTranslate = "translate(" + left + ",0)";
     };
 
     LineChartCtrl.prototype.computeScales = function() {
@@ -125,6 +133,10 @@
       };
     };
 
+    LineChartCtrl.prototype.strokeColor = function(i) {
+      return d3.scale.category10().range()[i % 10];
+    };
+
     return LineChartCtrl;
 
   })();
@@ -140,7 +152,7 @@
         data: '=rhData',
         options: '=rhOptions'
       },
-      template: "<svg>\n    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n			<path class='y-tick' ng-repeat='tick in ctrl.axis.yTicks track by $index' ng-attr-d={{tick}} />\n			<path class='x-tick' ng-repeat='tick in ctrl.axis.xTicks track by $index' ng-attr-d={{tick}} />\n		</g>\n	</g>\n	<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>\n		<path ng-repeat='line in ctrl.lines track by $index' ng-attr-d={{line}} />\n	</g>\n</svg>",
+      template: "<svg>\n	<g class='whole-chart' ng-attr-transform={{ctrl.marginTranslate}}>\n	    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n			\n			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n				<path class='y-tick' \n					ng-repeat='tick in ctrl.axis.yTicks track by $index' \n					ng-attr-d={{tick}} />\n\n				<path class='x-tick' \n					ng-repeat='tick in ctrl.axis.xTicks track by $index' \n					ng-attr-d={{tick}} />\n			</g>\n		</g>\n		<g style='fill: none; stroke-width:1.5px' class='rh-lines'>\n			<path ng-repeat='line in ctrl.lines track by $index' \n				ng-attr-d={{line}} \n				ng-attr-stroke={{ctrl.strokeColor($index)}} />\n		</g>\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var calcSize;
         calcSize = function() {

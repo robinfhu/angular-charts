@@ -9,13 +9,15 @@ class LineChartCtrl
 			'parentWidth'
 			'parentHeight'
 		]
-			$scope.$watch attr, => 
-				return unless @sanityCheck()
+			$scope.$watch attr, => @chartUpdate()
 
-				@computeArea()
-				@computeScales()
-				@computeLines()
-				@computeAxes()
+	chartUpdate: ->
+		return unless @sanityCheck()
+
+		@computeArea()
+		@computeScales()
+		@computeLines()
+		@computeAxes()
 
 	sanityCheck: ->
 		return false unless @$scope.data?
@@ -25,8 +27,13 @@ class LineChartCtrl
 		return true
 
 	computeArea: ->
-		@realWidth = @$scope.parentWidth
-		@realHeight = @$scope.parentHeight
+		left = @$scope.options.margin.left
+		bottom = @$scope.options.margin.bottom 
+
+		@realWidth = @$scope.parentWidth - left
+		@realHeight = @$scope.parentHeight - bottom
+		
+		@marginTranslate = "translate(#{left},0)"
 
 	computeScales: ->
 		values = @$scope.data[0].values 
@@ -98,6 +105,9 @@ class LineChartCtrl
 			yTicks: yTicks
 			xTicks: xTicks
 
+	strokeColor: (i)->
+		d3.scale.category10().range()[i % 10]
+
 
 
 module.controller LineChartCtrl.name, LineChartCtrl
@@ -111,17 +121,26 @@ module.directive 'rhLineChart', ($window)->
 		options: '=rhOptions'
 	template: """
 	<svg>
-	    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>
-			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />
-			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />
-			
-			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>
-				<path class='y-tick' ng-repeat='tick in ctrl.axis.yTicks track by $index' ng-attr-d={{tick}} />
-				<path class='x-tick' ng-repeat='tick in ctrl.axis.xTicks track by $index' ng-attr-d={{tick}} />
+		<g class='whole-chart' ng-attr-transform={{ctrl.marginTranslate}}>
+		    <g style='stroke: black; stroke-width: 2px;' class='rh-axes'>
+				<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />
+				<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />
+				
+				<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>
+					<path class='y-tick' 
+						ng-repeat='tick in ctrl.axis.yTicks track by $index' 
+						ng-attr-d={{tick}} />
+
+					<path class='x-tick' 
+						ng-repeat='tick in ctrl.axis.xTicks track by $index' 
+						ng-attr-d={{tick}} />
+				</g>
 			</g>
-		</g>
-		<g style='stroke: red;fill: none; stroke-width:1.5px' class='rh-lines'>
-			<path ng-repeat='line in ctrl.lines track by $index' ng-attr-d={{line}} />
+			<g style='fill: none; stroke-width:1.5px' class='rh-lines'>
+				<path ng-repeat='line in ctrl.lines track by $index' 
+					ng-attr-d={{line}} 
+					ng-attr-stroke={{ctrl.strokeColor($index)}} />
+			</g>
 		</g>
 	</svg>
 	"""
