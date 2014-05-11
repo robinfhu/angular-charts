@@ -154,7 +154,8 @@ module.directive 'rhLineChart', ($window)->
 						ng-repeat='label in ctrl.axis.yTickLabels' 
 						ng-attr-y={{label.y}}
 						x='-10'
-						class='y-tick' 
+						class='y-tick'
+						stroke='none' 
 						text-anchor='end'>
 
 					{{label.label}}
@@ -165,6 +166,7 @@ module.directive 'rhLineChart', ($window)->
 						ng-attr-x={{label.x}}
 						ng-attr-y={{ctrl.realHeight+10}}
 						class='x-tick' 
+						stroke='none'
 						text-anchor='middle'>
 
 					{{label.label}}
