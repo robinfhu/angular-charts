@@ -78,4 +78,19 @@ describe 'services', ->
 				result = bisect sample, i, getX
 				result.should.be.within(0,4)
 
+		it 'getX method can return index', ->
+			getI = (d,i)-> i 
+			sample = createSample [1,3,10,60,100]
+
+			result = bisect sample, 3, getI 
+			result.should.equal 3
+
+			result = bisect sample, 2.6, getI
+			result.should.equal 3
+
+			result = bisect sample, 3.1, getI
+			result.should.equal 3 
+
+			result = bisect sample, 3.98, getI
+			result.should.equal 4
 

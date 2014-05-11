@@ -381,10 +381,10 @@ describe 'Angular-Chart Module', ->
 			line = element[0].querySelector '.whole-chart .guideline'
 			should.exist line, 'guideline exists'
 
-			controller.updateGuideline {offsetX: 20}
+			controller.updateGuideline {offsetX: 60}
 			scope.$digest()
 
-			getAttr(line,'d').should.equal 'M10,0V103'
+			getAttr(line,'d').should.equal 'M46.5,0V103'
 
 			controller.showGuideline false
 			scope.$digest()

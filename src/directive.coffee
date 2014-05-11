@@ -1,7 +1,7 @@
 module = angular.module 'rh.angular-charts', []
 
 class LineChartCtrl
-	constructor: (@$scope)->
+	constructor: (@$scope, @interactiveBisect)->
 		@pathData = ''
 		@_displayGuideline = false
 		@guidelinePath = 'M0,0'
@@ -121,7 +121,15 @@ class LineChartCtrl
 		}
 
 	updateGuideline: (evt)->
-		xPos = evt.offsetX - @$scope.options.margin.left
+		xPixel = evt.offsetX - @$scope.options.margin.left
+		xDomain = @xScale.invert xPixel
+
+		result = @interactiveBisect @$scope.data[0].values, 
+			xDomain,
+			@$scope.options.getX 
+
+		xPos = @xScale result
+		 
 		@guidelinePath = "M#{xPos},0V#{@realHeight}"
 
 	showGuideline: (flag)->

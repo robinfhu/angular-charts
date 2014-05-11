@@ -19,15 +19,22 @@ module.factory 'interactiveBisect', ->
 		return null if values.length is 0
 		return 0 if values.length is 1
 
-		bisect = d3.bisector(getX).left
+		bisect = (vals,sch)->
+			for d,i in vals 
+				val = getX d,i 
+
+				if val >= sch 
+					return i 
+
+			return vals.length 
 
 		index = bisect values,search
 
 		index = d3.min [index, values.length-1]
 		if index > 0
 			prevIndex = index-1
-			prevVal = getX(values[prevIndex])
-			nextVal = getX(values[index])
+			prevVal = getX(values[prevIndex], prevIndex)
+			nextVal = getX(values[index], index)
 
 			if Math.abs(search-prevVal) < Math.abs(search-nextVal)
 				index = prevIndex			
