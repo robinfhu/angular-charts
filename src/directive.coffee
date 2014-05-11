@@ -60,7 +60,7 @@ class LineChartCtrl
 
 module.controller LineChartCtrl.name, LineChartCtrl
 
-module.directive 'rhLineChart', ->
+module.directive 'rhLineChart', ($window)->
 	restrict: 'EA'
 	controller: LineChartCtrl.name
 	controllerAs: 'ctrl'
@@ -83,6 +83,13 @@ module.directive 'rhLineChart', ->
 	</svg>
 	"""
 	link: (scope, element, attrs, controller)->
-		domElem = element[0]
-		scope.parentWidth = domElem.offsetWidth
-		scope.parentHeight = domElem.offsetHeight
+		calcSize = ->
+			domElem = element[0]
+			scope.parentWidth = domElem.offsetWidth
+			scope.parentHeight = domElem.offsetHeight
+
+		calcSize()
+
+		$window.onresize = ->
+			scope.$apply ->
+				calcSize()

@@ -71,7 +71,7 @@
 
   module.controller(LineChartCtrl.name, LineChartCtrl);
 
-  module.directive('rhLineChart', function() {
+  module.directive('rhLineChart', function($window) {
     return {
       restrict: 'EA',
       controller: LineChartCtrl.name,
@@ -82,10 +82,19 @@
       },
       template: "<svg>\n	<g style='stroke: red;fill: none;' class='rh-lines'>\n		<path ng-attr-d={{ctrl.pathData}} />\n	</g>\n\n	<g style='stroke: black; stroke-width: 2px;' class='rh-axes'>\n		<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n		<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n		\n		<g class='ticks'>\n		</g>\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
-        var domElem;
-        domElem = element[0];
-        scope.parentWidth = domElem.offsetWidth;
-        return scope.parentHeight = domElem.offsetHeight;
+        var calcSize;
+        calcSize = function() {
+          var domElem;
+          domElem = element[0];
+          scope.parentWidth = domElem.offsetWidth;
+          return scope.parentHeight = domElem.offsetHeight;
+        };
+        calcSize();
+        return $window.onresize = function() {
+          return scope.$apply(function() {
+            return calcSize();
+          });
+        };
       }
     };
   });
