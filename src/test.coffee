@@ -28,6 +28,11 @@ describe 'Angular-Chart Module', ->
 		getAttr = (elem, attr)->
 			elem.attributes.getNamedItem(attr).nodeValue
 
+		generate = (data=[])->
+			data.map (d,i)=>
+				x: i 
+				y: d 
+
 		it 'should exist (and have svg tag)', ->
 			element = createElem()
 			should.exist element, 'element exists'
@@ -57,13 +62,7 @@ describe 'Angular-Chart Module', ->
 		it 'creates a very simple line', ->
 			data = [
 				key: 'test'
-				values: [
-					x: 0
-					y: 0
-				,
-					x: 1
-					y: 1
-				]
+				values: generate [0,1]
 			]
 
 			element = createElem data
@@ -90,22 +89,7 @@ describe 'Angular-Chart Module', ->
 		it 'creates a line with 5 points', ->
 			data = [
 				key: 'test'
-				values: [
-					x: 0
-					y: 0
-				,
-					x: 1
-					y: 1
-				,
-					x: 2
-					y: 0.5
-				,
-					x: 3
-					y: 0.25
-				,
-					x: 4
-					y: 0.4
-				]
+				values: generate [0,1,0.5,0.25,0.4]
 			]
  
 			element = createElem data
@@ -125,16 +109,7 @@ describe 'Angular-Chart Module', ->
 
 		defaultData = [
 			key: 'test'
-			values: [
-				x: 0
-				y: 0
-			,
-				x: 1
-				y: 2
-			,
-				x: 2
-				y: 1
-			]
+			values: generate [0,2,1]
 		]
 
 		it 'creates a line with Y range of [0,2]', -> 
@@ -156,40 +131,13 @@ describe 'Angular-Chart Module', ->
 		it 'creates multiple line series`', ->
 			data = [
 				key: 'test 1'
-				values: [
-					x: 0
-					y: 10
-				,
-					x: 1
-					y: 20
-				,
-					x: 2
-					y: 30
-				]
+				values: generate [10,20,30]
 			,
 				key: 'test 2'
-				values: [
-					x: 0
-					y: 5
-				,
-					x: 1
-					y: 10
-				,
-					x: 2
-					y: 15
-				]
+				values: generate [5,10,15]
 			,
 				key: 'test 3'
-				values: [
-					x: 0
-					y: 1
-				,
-					x: 1
-					y: 1.5
-				,
-					x: 2
-					y: 1.7
-				]
+				values: generate [1,1.5,1.7]
 			]
 
 			element = createElem data 
@@ -393,3 +341,37 @@ describe 'Angular-Chart Module', ->
 			scope.$digest()
 			line = element[0].querySelector '.whole-chart .guideline'
 			should.not.exist line, 'guideline does not exists'
+
+		it 'has highlight points when hovering over chart', ->
+			data = [
+				key: 'test 1'
+				values: generate [1,2,3]
+			,
+				key: 'test 2'
+				values: generate [6.7,6.8,6.9]
+			,
+				key: 'test 3'
+				values: generate [3,6,9]
+			]
+			element = createElem data
+
+			scope = element.isolateScope()
+			controller = element.controller 'rhLineChart'
+
+			scope.parentWidth = 103
+			scope.parentHeight = 103
+			controller.showGuideline true
+
+			scope.$digest()
+
+			controller.updateGuideline {offsetX: 60}
+			scope.$digest()
+
+			circles = element[0].querySelectorAll '.interactives circle.highlight-point'
+			circles.should.have.length 3
+
+			for circle in circles 
+				getAttr(circle,'r').should.equal '5'
+				should.exist getAttr(circle,'cx')
+				should.exist getAttr(circle,'cy')
+
