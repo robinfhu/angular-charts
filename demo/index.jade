@@ -13,8 +13,8 @@ html(lang="en")
 			function getStocks() {
 				var stocks = [];
 				var startPrice = 50.1;
-				var volatility = 0.08;
-				for(var i = 0; i < 50; i++) {
+				var volatility = 0.012;
+				for(var i = 0; i < 300; i++) {
 					stocks.push({
 						x: i,
 						y: startPrice
@@ -33,20 +33,16 @@ html(lang="en")
 			}
 
 			function DemoController($scope) {
-				$scope.data = [
-					{
-						key: 'test',
-						values: getStocks()
-					},
-					{
-						key: 'test 2',
-						values: getStocks()
-					},
-					{
-						key: 'test 3',
-						values: getStocks()
-					}
-				]
+				$scope.data = [];
+
+				for(var i =0; i < 10; i++) {
+					$scope.data.push(
+						{
+							key: 'Series ' + i ,
+							values: getStocks()
+						}
+					);
+				}
 
 				$scope.options = {
 					getX: function(d,i) { return i; },

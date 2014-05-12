@@ -84,8 +84,12 @@ class LineChartCtrl
 		Loop through all series' and create a <path> definition
 		for each line.
 		###
-		@lines = @$scope.data.map (d)=>
-			@computePath d.values 
+		@lines = @$scope.data.map (d,i)=>
+			d.color = @strokeColor i
+			config = 
+				path: @computePath d.values 
+				color: d.color
+
 
 	computeAxes: ->
 		###
@@ -121,16 +125,25 @@ class LineChartCtrl
 		}
 
 	updateGuideline: (evt)->
+		opts = @$scope.options
 		xPixel = evt.offsetX - @$scope.options.margin.left
 		xDomain = @xScale.invert xPixel
 
-		result = @interactiveBisect @$scope.data[0].values, 
+		xIndex = @interactiveBisect @$scope.data[0].values, 
 			xDomain,
 			@$scope.options.getX 
 
-		xPos = @xScale result
-		 
+		xPos = @xScale xIndex
 		@guidelinePath = "M#{xPos},0V#{@realHeight}"
+
+		@guidePoints = @$scope.data.map (series)=>
+			yVal = opts.getY series.values[xIndex]
+			yPos = @yScale yVal 
+
+			config = 
+				x: xPos
+				y: yPos
+				color: series.color
 
 	showGuideline: (flag)->
 		return @_displayGuideline unless flag?
@@ -183,7 +196,7 @@ module.directive 'rhLineChart', ($window)->
 					<text
 						ng-repeat='label in ctrl.axis.xTickLabels' 
 						ng-attr-x={{label.x}}
-						ng-attr-y={{ctrl.realHeight+10}}
+						ng-attr-y={{ctrl.realHeight+20}}
 						class='x-tick' 
 						stroke='none'
 						text-anchor='middle'>
@@ -194,22 +207,32 @@ module.directive 'rhLineChart', ($window)->
 			</g>
 			<g style='fill: none; stroke-width:1.5px' class='rh-lines'>
 				<path ng-repeat='line in ctrl.lines track by $index' 
-					ng-attr-d={{line}} 
-					ng-attr-stroke={{ctrl.strokeColor($index)}} />
+					ng-attr-d={{line.path}} 
+					ng-attr-stroke={{line.color}} />
 			</g>
 
-			<path class='guideline' 
-				stroke='#aaa'
-				ng-attr-d={{ctrl.guidelinePath}} 
-				ng-if='ctrl.showGuideline()' />
+			<g class='interactives'>
+				<path class='guideline' 
+					stroke='#aaa'
+					ng-attr-d={{ctrl.guidelinePath}} 
+					ng-if='ctrl.showGuideline()' />
 
-			<rect 
-				class='interactive-layer' 
-				ng-mouseenter='ctrl.showGuideline(true)'
-				ng-mouseleave='ctrl.showGuideline(false)'
-				ng-mousemove='ctrl.updateGuideline($event)'
-				ng-attr-height={{ctrl.realHeight}}
-				ng-attr-width={{ctrl.realWidth}} />
+				<circle class='highlight-point'
+					ng-repeat='point in ctrl.guidePoints'
+					ng-if='ctrl.showGuideline()'
+					r='5'
+					ng-attr-cx={{point.x}}
+					ng-attr-cy={{point.y}} 
+					ng-attr-fill={{point.color}} />
+
+				<rect 
+					class='interactive-layer' 
+					ng-mouseenter='ctrl.showGuideline(true)'
+					ng-mouseleave='ctrl.showGuideline(false)'
+					ng-mousemove='ctrl.updateGuideline($event)'
+					ng-attr-height={{ctrl.realHeight}}
+					ng-attr-width={{ctrl.realWidth}} />
+			</g>
 		</g>
 	</svg>
 	"""

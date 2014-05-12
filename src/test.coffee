@@ -386,6 +386,9 @@ describe 'Angular-Chart Module', ->
 
 			getAttr(line,'d').should.equal 'M46.5,0V103'
 
+			circles = element[0].querySelectorAll '.interactives circle.highlight-point'
+			circles.should.have.length 1
+
 			controller.showGuideline false
 			scope.$digest()
 			line = element[0].querySelector '.whole-chart .guideline'

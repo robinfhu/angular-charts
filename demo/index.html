@@ -1,8 +1,8 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>AngularJS Charts by Robin Hu</title><script src="../bower_components/d3/d3.js"></script><script src="../bower_components/angular/angular.js"></script><script src="../dist/angular-charts.js"></script><link href="style.css" rel="stylesheet" type="text/css"><script type="text/javascript">function getStocks() {
  var stocks = [];
  var startPrice = 50.1;
- var volatility = 0.08;
- for(var i = 0; i < 50; i++) {
+ var volatility = 0.012;
+ for(var i = 0; i < 300; i++) {
   stocks.push({
    x: i,
    y: startPrice
@@ -21,20 +21,16 @@
 }
 
 function DemoController($scope) {
- $scope.data = [
-  {
-   key: 'test',
-   values: getStocks()
-  },
-  {
-   key: 'test 2',
-   values: getStocks()
-  },
-  {
-   key: 'test 3',
-   values: getStocks()
-  }
- ]
+ $scope.data = [];
+ 
+ for(var i =0; i < 10; i++) {
+  $scope.data.push(
+   {
+    key: 'Series ' + i ,
+    values: getStocks()
+   }
+  );
+ }
  
  $scope.options = {
   getX: function(d,i) { return i; },

@@ -101,8 +101,13 @@
       		for each line.
        */
       return this.lines = this.$scope.data.map((function(_this) {
-        return function(d) {
-          return _this.computePath(d.values);
+        return function(d, i) {
+          var config;
+          d.color = _this.strokeColor(i);
+          return config = {
+            path: _this.computePath(d.values),
+            color: d.color
+          };
         };
       })(this));
     };
@@ -157,12 +162,25 @@
     };
 
     LineChartCtrl.prototype.updateGuideline = function(evt) {
-      var result, xDomain, xPixel, xPos;
+      var opts, xDomain, xIndex, xPixel, xPos;
+      opts = this.$scope.options;
       xPixel = evt.offsetX - this.$scope.options.margin.left;
       xDomain = this.xScale.invert(xPixel);
-      result = this.interactiveBisect(this.$scope.data[0].values, xDomain, this.$scope.options.getX);
-      xPos = this.xScale(result);
-      return this.guidelinePath = "M" + xPos + ",0V" + this.realHeight;
+      xIndex = this.interactiveBisect(this.$scope.data[0].values, xDomain, this.$scope.options.getX);
+      xPos = this.xScale(xIndex);
+      this.guidelinePath = "M" + xPos + ",0V" + this.realHeight;
+      return this.guidePoints = this.$scope.data.map((function(_this) {
+        return function(series) {
+          var config, yPos, yVal;
+          yVal = opts.getY(series.values[xIndex]);
+          yPos = _this.yScale(yVal);
+          return config = {
+            x: xPos,
+            y: yPos,
+            color: series.color
+          };
+        };
+      })(this));
     };
 
     LineChartCtrl.prototype.showGuideline = function(flag) {
@@ -191,7 +209,7 @@
         data: '=rhData',
         options: '=rhOptions'
       },
-      template: "<svg>\n	<g class='whole-chart rh-chart' ng-attr-transform={{ctrl.marginTranslate}}>\n	    <g style='stroke: black;' class='rh-axes'>\n			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n			\n			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n				<path class='y-tick' \n					ng-repeat='tick in ctrl.axis.yTicks track by $index' \n					ng-attr-d={{tick}} />\n\n				<path class='x-tick' \n					ng-repeat='tick in ctrl.axis.xTicks track by $index' \n					ng-attr-d={{tick}} />\n			</g>\n\n			<g class='labels'>\n				<text\n					ng-repeat='label in ctrl.axis.yTickLabels' \n					ng-attr-y={{label.y}}\n					x='-10'\n					class='y-tick'\n					stroke='none' \n					text-anchor='end'>\n\n				{{label.label}}\n				</text>\n\n				<text\n					ng-repeat='label in ctrl.axis.xTickLabels' \n					ng-attr-x={{label.x}}\n					ng-attr-y={{ctrl.realHeight+10}}\n					class='x-tick' \n					stroke='none'\n					text-anchor='middle'>\n\n				{{label.label}}\n				</text>\n			</g>\n		</g>\n		<g style='fill: none; stroke-width:1.5px' class='rh-lines'>\n			<path ng-repeat='line in ctrl.lines track by $index' \n				ng-attr-d={{line}} \n				ng-attr-stroke={{ctrl.strokeColor($index)}} />\n		</g>\n\n		<path class='guideline' \n			stroke='#aaa'\n			ng-attr-d={{ctrl.guidelinePath}} \n			ng-if='ctrl.showGuideline()' />\n\n		<rect \n			class='interactive-layer' \n			ng-mouseenter='ctrl.showGuideline(true)'\n			ng-mouseleave='ctrl.showGuideline(false)'\n			ng-mousemove='ctrl.updateGuideline($event)'\n			ng-attr-height={{ctrl.realHeight}}\n			ng-attr-width={{ctrl.realWidth}} />\n	</g>\n</svg>",
+      template: "<svg>\n	<g class='whole-chart rh-chart' ng-attr-transform={{ctrl.marginTranslate}}>\n	    <g style='stroke: black;' class='rh-axes'>\n			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n			\n			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n				<path class='y-tick' \n					ng-repeat='tick in ctrl.axis.yTicks track by $index' \n					ng-attr-d={{tick}} />\n\n				<path class='x-tick' \n					ng-repeat='tick in ctrl.axis.xTicks track by $index' \n					ng-attr-d={{tick}} />\n			</g>\n\n			<g class='labels'>\n				<text\n					ng-repeat='label in ctrl.axis.yTickLabels' \n					ng-attr-y={{label.y}}\n					x='-10'\n					class='y-tick'\n					stroke='none' \n					text-anchor='end'>\n\n				{{label.label}}\n				</text>\n\n				<text\n					ng-repeat='label in ctrl.axis.xTickLabels' \n					ng-attr-x={{label.x}}\n					ng-attr-y={{ctrl.realHeight+20}}\n					class='x-tick' \n					stroke='none'\n					text-anchor='middle'>\n\n				{{label.label}}\n				</text>\n			</g>\n		</g>\n		<g style='fill: none; stroke-width:1.5px' class='rh-lines'>\n			<path ng-repeat='line in ctrl.lines track by $index' \n				ng-attr-d={{line.path}} \n				ng-attr-stroke={{line.color}} />\n		</g>\n\n		<g class='interactives'>\n			<path class='guideline' \n				stroke='#aaa'\n				ng-attr-d={{ctrl.guidelinePath}} \n				ng-if='ctrl.showGuideline()' />\n\n			<circle class='highlight-point'\n				ng-repeat='point in ctrl.guidePoints'\n				ng-if='ctrl.showGuideline()'\n				r='5'\n				ng-attr-cx={{point.x}}\n				ng-attr-cy={{point.y}} \n				ng-attr-fill={{point.color}} />\n\n			<rect \n				class='interactive-layer' \n				ng-mouseenter='ctrl.showGuideline(true)'\n				ng-mouseleave='ctrl.showGuideline(false)'\n				ng-mousemove='ctrl.updateGuideline($event)'\n				ng-attr-height={{ctrl.realHeight}}\n				ng-attr-width={{ctrl.realWidth}} />\n		</g>\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var calcSize;
         calcSize = function() {
