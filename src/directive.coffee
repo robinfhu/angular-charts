@@ -5,6 +5,7 @@ class LineChartCtrl
 		@pathData = ''
 		@_displayGuideline = false
 		@guidelinePath = 'M0,0'
+		@_disabled = {}
 
 		for attr in [
 			'data'
@@ -12,6 +13,8 @@ class LineChartCtrl
 			'parentHeight'
 		]
 			$scope.$watch attr, => @chartUpdate()
+
+		$scope.$watch (=> @_disabled), (=> @chartUpdate()), true
 
 	chartUpdate: ->
 		return unless @sanityCheck()
@@ -38,14 +41,14 @@ class LineChartCtrl
 		@marginTranslate = "translate(#{left},0)"
 
 	computeScales: ->
-		values = @$scope.data[0].values 
+		xValues = @$scope.data[0].values 
 		opts = @$scope.options
 
 		@xScale = d3.scale.linear()
 		@yScale = d3.scale.linear()
 
 		# Figure out min and max x-axis values
-		xExtent = d3.extent values.map opts.getX 
+		xExtent = d3.extent xValues.map opts.getX 
 		@xScale.domain(xExtent).range([0,@realWidth])
 		
 		###
@@ -53,7 +56,9 @@ class LineChartCtrl
 		from all data points
 		###
 		yValues = d3.merge @$scope.data.map(
-			(d)-> d.values.map(opts.getY)
+			(d)=>
+				return [] if  @_disabled[d.key]
+				d.values.map(opts.getY)
 		) 
 
 		yExtent = d3.extent yValues
@@ -86,10 +91,12 @@ class LineChartCtrl
 		###
 		@lines = @$scope.data.map (d,i)=>
 			d.color = @strokeColor i
-			config = 
-				path: @computePath d.values 
-				color: d.color
+			d.path = @computePath d.values 
 
+			d
+
+		@legends = angular.copy @lines 
+		@lines = @lines.filter (d)=> @isEnabled d.key
 
 	computeAxes: ->
 		###
@@ -136,7 +143,8 @@ class LineChartCtrl
 		xPos = @xScale xIndex
 		@guidelinePath = "M#{xPos},0V#{@realHeight}"
 
-		@guidePoints = @$scope.data.map (series)=>
+		@guidePoints = @$scope.data.filter((d)=> @isEnabled d.key)
+		.map (series)=>
 			yVal = opts.getY series.values[xIndex]
 			yPos = @yScale yVal 
 
@@ -153,6 +161,11 @@ class LineChartCtrl
 	strokeColor: (i)->
 		d3.scale.category10().range()[i % 10]
 
+	toggleDisabled: (key)->
+		@_disabled[key] = not @_disabled[key]
+
+	isEnabled: (key)->
+		not @_disabled[key]
 
 
 module.controller LineChartCtrl.name, LineChartCtrl
@@ -165,6 +178,14 @@ module.directive 'rhLineChart', ($window)->
 		data: '=rhData'
 		options: '=rhOptions'
 	template: """
+	<div class='legend-section'>
+		<div class='legend' 
+			ng-repeat='line in ctrl.legends'
+			ng-click='ctrl.toggleDisabled(line.key)' >
+
+			<span ng-if='ctrl.isEnabled(line.key)'>*</span> {{line.label}}
+		</div>
+	</div>
 	<svg>
 		<g class='whole-chart rh-chart' ng-attr-transform={{ctrl.marginTranslate}}>
 		    <g style='stroke: black;' class='rh-axes'>

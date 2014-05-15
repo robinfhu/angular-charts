@@ -375,3 +375,49 @@ describe 'Angular-Chart Module', ->
 				should.exist getAttr(circle,'cx')
 				should.exist getAttr(circle,'cy')
 
+		it 'has section with legends', ->
+			data = [
+				label: 'Series 1'
+				key: 'test1'
+				values: generate [1,2,3]
+			,
+				label: 'Series Two'
+				key: 'test2'
+				values: generate [6.7,6.8,6.9]
+			,
+				label: 'Series Three'
+				key: 'test3'
+				values: generate [3,6,9]
+			]
+			element = createElem data
+
+			scope = element.isolateScope()
+			controller = element.controller 'rhLineChart'
+
+			scope.$digest()
+
+			legend = element[0].querySelector '.legend-section'
+			should.exist legend, 'legend element exists'
+
+			legendItems = legend.querySelectorAll '.legend'
+			legendItems.should.have.length 3
+			legendItems[0].innerText.should.contain 'Series 1'
+			legendItems[1].innerText.should.contain 'Series Two'
+			legendItems[2].innerText.should.contain 'Series Three'
+
+			clickLegend = ->
+				legend.querySelectorAll('.legend')[0].click()
+
+			clickLegend()
+			scope.$digest()
+
+			lines = element[0].querySelectorAll 'svg .rh-lines path'
+			lines.should.have.length 2
+
+			clickLegend()
+			scope.$digest()
+
+			lines = element[0].querySelectorAll 'svg .rh-lines path'
+			lines.should.have.length 3
+			
+

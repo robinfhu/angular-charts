@@ -11,6 +11,7 @@
       this.pathData = '';
       this._displayGuideline = false;
       this.guidelinePath = 'M0,0';
+      this._disabled = {};
       _ref = ['data', 'parentWidth', 'parentHeight'];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         attr = _ref[_i];
@@ -20,6 +21,15 @@
           };
         })(this));
       }
+      $scope.$watch(((function(_this) {
+        return function() {
+          return _this._disabled;
+        };
+      })(this)), ((function(_this) {
+        return function() {
+          return _this.chartUpdate();
+        };
+      })(this)), true);
     }
 
     LineChartCtrl.prototype.chartUpdate = function() {
@@ -55,21 +65,26 @@
     };
 
     LineChartCtrl.prototype.computeScales = function() {
-      var opts, values, xExtent, yExtent, yValues;
-      values = this.$scope.data[0].values;
+      var opts, xExtent, xValues, yExtent, yValues;
+      xValues = this.$scope.data[0].values;
       opts = this.$scope.options;
       this.xScale = d3.scale.linear();
       this.yScale = d3.scale.linear();
-      xExtent = d3.extent(values.map(opts.getX));
+      xExtent = d3.extent(xValues.map(opts.getX));
       this.xScale.domain(xExtent).range([0, this.realWidth]);
 
       /*
       		Figure out the maximum and minimum y-axis value
       		from all data points
        */
-      yValues = d3.merge(this.$scope.data.map(function(d) {
-        return d.values.map(opts.getY);
-      }));
+      yValues = d3.merge(this.$scope.data.map((function(_this) {
+        return function(d) {
+          if (_this._disabled[d.key]) {
+            return [];
+          }
+          return d.values.map(opts.getY);
+        };
+      })(this)));
       yExtent = d3.extent(yValues);
       return this.yScale.domain(yExtent).range([this.realHeight, 0]);
     };
@@ -100,14 +115,17 @@
       		Loop through all series' and create a <path> definition
       		for each line.
        */
-      return this.lines = this.$scope.data.map((function(_this) {
+      this.lines = this.$scope.data.map((function(_this) {
         return function(d, i) {
-          var config;
           d.color = _this.strokeColor(i);
-          return config = {
-            path: _this.computePath(d.values),
-            color: d.color
-          };
+          d.path = _this.computePath(d.values);
+          return d;
+        };
+      })(this));
+      this.legends = angular.copy(this.lines);
+      return this.lines = this.lines.filter((function(_this) {
+        return function(d) {
+          return _this.isEnabled(d.key);
         };
       })(this));
     };
@@ -169,7 +187,11 @@
       xIndex = this.interactiveBisect(this.$scope.data[0].values, xDomain, this.$scope.options.getX);
       xPos = this.xScale(xIndex);
       this.guidelinePath = "M" + xPos + ",0V" + this.realHeight;
-      return this.guidePoints = this.$scope.data.map((function(_this) {
+      return this.guidePoints = this.$scope.data.filter((function(_this) {
+        return function(d) {
+          return _this.isEnabled(d.key);
+        };
+      })(this)).map((function(_this) {
         return function(series) {
           var config, yPos, yVal;
           yVal = opts.getY(series.values[xIndex]);
@@ -194,6 +216,15 @@
       return d3.scale.category10().range()[i % 10];
     };
 
+    LineChartCtrl.prototype.toggleDisabled = function(key) {
+      console.log('***** toggle disabled ', key);
+      return this._disabled[key] = !this._disabled[key];
+    };
+
+    LineChartCtrl.prototype.isEnabled = function(key) {
+      return !this._disabled[key];
+    };
+
     return LineChartCtrl;
 
   })();
@@ -209,7 +240,7 @@
         data: '=rhData',
         options: '=rhOptions'
       },
-      template: "<svg>\n	<g class='whole-chart rh-chart' ng-attr-transform={{ctrl.marginTranslate}}>\n	    <g style='stroke: black;' class='rh-axes'>\n			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n			\n			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n				<path class='y-tick' \n					ng-repeat='tick in ctrl.axis.yTicks track by $index' \n					ng-attr-d={{tick}} />\n\n				<path class='x-tick' \n					ng-repeat='tick in ctrl.axis.xTicks track by $index' \n					ng-attr-d={{tick}} />\n			</g>\n\n			<g class='labels'>\n				<text\n					ng-repeat='label in ctrl.axis.yTickLabels' \n					ng-attr-y={{label.y}}\n					x='-10'\n					class='y-tick'\n					stroke='none' \n					text-anchor='end'>\n\n				{{label.label}}\n				</text>\n\n				<text\n					ng-repeat='label in ctrl.axis.xTickLabels' \n					ng-attr-x={{label.x}}\n					ng-attr-y={{ctrl.realHeight+20}}\n					class='x-tick' \n					stroke='none'\n					text-anchor='middle'>\n\n				{{label.label}}\n				</text>\n			</g>\n		</g>\n		<g style='fill: none; stroke-width:1.5px' class='rh-lines'>\n			<path ng-repeat='line in ctrl.lines track by $index' \n				ng-attr-d={{line.path}} \n				ng-attr-stroke={{line.color}} />\n		</g>\n\n		<g class='interactives'>\n			<path class='guideline' \n				stroke='#aaa'\n				ng-attr-d={{ctrl.guidelinePath}} \n				ng-if='ctrl.showGuideline()' />\n\n			<circle class='highlight-point'\n				ng-repeat='point in ctrl.guidePoints'\n				ng-if='ctrl.showGuideline()'\n				r='5'\n				ng-attr-cx={{point.x}}\n				ng-attr-cy={{point.y}} \n				ng-attr-fill={{point.color}} />\n\n			<rect \n				class='interactive-layer' \n				ng-mouseenter='ctrl.showGuideline(true)'\n				ng-mouseleave='ctrl.showGuideline(false)'\n				ng-mousemove='ctrl.updateGuideline($event)'\n				ng-attr-height={{ctrl.realHeight}}\n				ng-attr-width={{ctrl.realWidth}} />\n		</g>\n	</g>\n</svg>",
+      template: "<div class='legend-section'>\n	<div class='legend' \n		ng-repeat='line in ctrl.legends'\n		ng-click='ctrl.toggleDisabled(line.key)' >\n\n		<span ng-if='ctrl.isEnabled(line.key)'>*</span> {{line.label}}\n	</div>\n</div>\n<svg>\n	<g class='whole-chart rh-chart' ng-attr-transform={{ctrl.marginTranslate}}>\n	    <g style='stroke: black;' class='rh-axes'>\n			<path class='x-axis' ng-attr-d={{ctrl.axis.xPathData}} />\n			<path class='y-axis' ng-attr-d={{ctrl.axis.yPathData}} />\n			\n			<g class='ticks' style='stroke: #ccc; stroke-width: 1px;'>\n				<path class='y-tick' \n					ng-repeat='tick in ctrl.axis.yTicks track by $index' \n					ng-attr-d={{tick}} />\n\n				<path class='x-tick' \n					ng-repeat='tick in ctrl.axis.xTicks track by $index' \n					ng-attr-d={{tick}} />\n			</g>\n\n			<g class='labels'>\n				<text\n					ng-repeat='label in ctrl.axis.yTickLabels' \n					ng-attr-y={{label.y}}\n					x='-10'\n					class='y-tick'\n					stroke='none' \n					text-anchor='end'>\n\n				{{label.label}}\n				</text>\n\n				<text\n					ng-repeat='label in ctrl.axis.xTickLabels' \n					ng-attr-x={{label.x}}\n					ng-attr-y={{ctrl.realHeight+20}}\n					class='x-tick' \n					stroke='none'\n					text-anchor='middle'>\n\n				{{label.label}}\n				</text>\n			</g>\n		</g>\n		<g style='fill: none; stroke-width:1.5px' class='rh-lines'>\n			<path ng-repeat='line in ctrl.lines track by $index' \n				ng-attr-d={{line.path}} \n				ng-attr-stroke={{line.color}} />\n		</g>\n\n		<g class='interactives'>\n			<path class='guideline' \n				stroke='#aaa'\n				ng-attr-d={{ctrl.guidelinePath}} \n				ng-if='ctrl.showGuideline()' />\n\n			<circle class='highlight-point'\n				ng-repeat='point in ctrl.guidePoints'\n				ng-if='ctrl.showGuideline()'\n				r='5'\n				ng-attr-cx={{point.x}}\n				ng-attr-cy={{point.y}} \n				ng-attr-fill={{point.color}} />\n\n			<rect \n				class='interactive-layer' \n				ng-mouseenter='ctrl.showGuideline(true)'\n				ng-mouseleave='ctrl.showGuideline(false)'\n				ng-mousemove='ctrl.updateGuideline($event)'\n				ng-attr-height={{ctrl.realHeight}}\n				ng-attr-width={{ctrl.realWidth}} />\n		</g>\n	</g>\n</svg>",
       link: function(scope, element, attrs, controller) {
         var calcSize;
         calcSize = function() {
