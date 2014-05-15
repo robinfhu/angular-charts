@@ -51,7 +51,8 @@ html(lang="en")
 					margin: {
 						left: 90,
 						bottom: 90
-					}
+					},
+					yFormatter: function(d) {return '$' + d3.format(',.2f')(d);}
 				}
 			}
 

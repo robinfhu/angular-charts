@@ -99,6 +99,7 @@ class LineChartCtrl
 		@lines = @lines.filter (d)=> @isEnabled d.key
 
 	computeAxes: ->
+		opts = @$scope.options 
 		###
 		Compute x,y locations for the tick grid lines
 		###
@@ -115,7 +116,7 @@ class LineChartCtrl
 
 		yTickLabels = @yScale.ticks().map (t)=>
 			config =
-				label: t
+				label: opts.yFormatter t
 				y: @yScale t 
 
 		yTicks = @yScale.ticks().map (t)=>
@@ -258,6 +259,11 @@ module.directive 'rhLineChart', ($window)->
 	</svg>
 	"""
 	link: (scope, element, attrs, controller)->
+		_defaultOptions = 
+			yFormatter: angular.identity 
+
+		scope.options = angular.extend {}, _defaultOptions, scope.options 
+
 		calcSize = ->
 			domElem = element[0]
 			scope.parentWidth = domElem.offsetWidth
